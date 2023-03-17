@@ -1,6 +1,7 @@
 import pickle
 import datetime
 import os
+import re
 import openai
 
 """
@@ -9,6 +10,9 @@ import openai
 
 # 参考
 # https://snuow.com/blog/ChatGPT%E3%81%AEAPI%E3%82%92%E7%B0%A1%E5%8D%98%E3%81%AB%E4%BD%BF%E3%81%A3%E3%81%A6%E3%81%BF%E3%81%9F%E3%80%82/
+# https://nikkie-ftnext.hatenablog.com/entry/my-first-shion-python-speech-recognition-part3
+# https://github.com/Uberi/speech_recognition
+
 
 # 環境設定
 #openai.organization = "org-w9OLF18WAxKDo46FLWIOjoV"    # organization id
@@ -29,7 +33,7 @@ def request_chat(input_to_chatgpt: str) -> str:
 
     # 実際のメッセージとロール
     messages = [
-            {"role": "system", "content": "あなたは主人に仕える優秀なメイドです。"},
+            {"role": "system", "content": "あなたは日本人で、主人に仕える優秀なメイドです。"},
             {"role": "user", "content": input_to_chatgpt}
         ]
 
@@ -45,7 +49,18 @@ def request_chat(input_to_chatgpt: str) -> str:
     save_chat(messages=messages,response={'response':res})  # やりとりの保存
     #print(res)
 
-    return res['choices'][0]['message']['content']
+    text = res['choices'][0]['message']['content']
+
+    return 
+
+
+# テキストを句読点で分割
+def separate_text(text: str):
+    pattern = re.compile(r"(?<=、)|(?<=。)|(?<=！)|(?<=？)")
+    sentences = re.split(pattern,text)
+    if (1 < len(sentences)): sentences = sentences[:-1]
+    #print(sentences)
+    return sentences
 
 
 # テスト

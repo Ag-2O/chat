@@ -1,8 +1,11 @@
 import requests, json
 import io
+import sys
 import wave
 import time
 import pyaudio
+import threading
+import queue
 
 """
     VoiceVoxを使って音声出力を行う
@@ -15,10 +18,47 @@ class Voicevox:
     def __init__(self,host="127.0.0.1",port=50021):
         self.host = host
         self.port = port
+        self.is_complete = False    # 完了フラグ
 
 
-    def speak(self,text=None,speaker=47):
+    # テキストの読み上げ
+    def read_text(self,text_list: list,speaker=47,is_parallel: bool = True):
+        try:
+            if (1 < len(text_list) and is_parallel):
+                q = queue.Queue()
 
+                thread = threading.Thread(target=self.texts_to_wavs, args=(text_list,q,speaker))
+                thread.start()
+
+                while True:
+                    if q.empty() and self.is_complete: break
+
+                    if not q.empty():
+                        self.play_wav(q.get())
+                    else:
+                        time.sleep(0.5)
+
+            else:
+                for text in text_list:
+                    audio = self.text_to_wav(text,speaker)
+                    self.play_wav(audio)
+        
+        except Exception as e:
+            import traceback
+            etype, value, tb = sys.exc_info()
+            print(traceback.format_exception(etype, value, tb))
+            audio = self.text_to_wav("予期せぬエラーが発生したため、もう一度お願いいたします。",speaker)
+            self.play_wav(audio)
+
+
+    # テキストリストを順次音声へ
+    def texts_to_wavs(self,text_list:list, q, speaker=47):
+        for text in text_list:
+            q.put(self.text_to_wav(text,speaker))
+        self.is_complete = True
+
+    # テキストから音声へ
+    def text_to_wav(self,text=None,speaker=47):
         params = (
             ("text", text),
             ("speaker", speaker)  # 音声の種類をInt型で指定
@@ -36,9 +76,11 @@ class Voicevox:
             data=json.dumps(init_q.json())
         )
 
-        # メモリ上で展開
-        audio = io.BytesIO(res.content)
+        return io.BytesIO(res.content)
 
+
+    # 音声の再生
+    def play_wav(self,audio):
         with wave.open(audio,'rb') as f:
             # 以下再生用処理
             p = pyaudio.PyAudio()
@@ -62,11 +104,10 @@ class Voicevox:
             stream.close()
             p.terminate()
 
-
 # テスト
 def test():
     vv = Voicevox()
-    vv.speak(text="こんにちは")    
+    vv.read_text(text="こんにちは")    
 
 
 if __name__ == "__main__":

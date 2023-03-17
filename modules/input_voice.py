@@ -3,10 +3,19 @@ import os
 import wave
 import pyaudio
 import whisper
+import numpy as np
+import soundfile as sf
+import speech_recognition as sr
+from io import BytesIO
+
 
 """
     音声入力をテキストに変換する
 """
+
+# 参考
+# 
+# https://nikkie-ftnext.hatenablog.com/entry/my-first-shion-speech-recognition-whisper-microphone-repeatedly#%E7%B5%90%E8%AB%96Whisper%E3%81%AF%E3%83%9E%E3%82%A4%E3%82%AF%E3%81%8B%E3%82%89%E3%82%82%E9%9F%B3%E5%A3%B0%E8%AA%8D%E8%AD%98%E3%81%A7%E3%81%8D%E3%81%BE%E3%81%99
 
 CHUNK = 1024
 FORMAT = pyaudio.paInt16
@@ -65,6 +74,9 @@ def save_voice() -> None:
 
 # 音声認識モデルによって音声をテキストに変換する
 def voice_to_text() -> str:
+    # 音声の録音
+    save_voice()
+
     # ベースモデルのロード(他にもlarge, smallがある)
     model = whisper.load_model("base")
 
@@ -81,9 +93,46 @@ def voice_to_text() -> str:
     # テキストへ
     options = whisper.DecodingOptions(fp16=False)
     result = whisper.decode(model, mel, options)
-    #print(result.text)
+    #result = model.transcribe(path)
+    print(result.text)
 
     return result.text
+    #return result["text"]
+
+
+# マイク音声からテキストに変換する
+def bytes_to_text() -> str:
+    recognizer = sr.Recognizer()
+
+    #result: str = ""
+
+    # マイクから音声を取得
+    with sr.Microphone(sample_rate=RATE) as source:
+        print("> お話しをどうぞ")
+        audio = recognizer.listen(source)
+    print("> 変換中・・・")
+
+    # whisperの入力形式に変換
+    result = recognizer.recognize_whisper(audio, model="base", language="japanese")
+
+    """
+    while True:
+        try:
+            # マイクから音声を取得
+            with sr.Microphone(sample_rate=RATE) as source:
+                print("> お話しをどうぞ")
+                audio = recognizer.listen(source)
+            print("> 変換中・・・")
+
+            # whisperの入力形式に変換
+            result += recognizer.recognize_whisper(audio, model="base", language="japanese")
+
+        except KeyboardInterrupt:
+            break
+    """
+
+    print(result)
+    return result
 
 
 # テスト
