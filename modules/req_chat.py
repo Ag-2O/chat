@@ -29,11 +29,11 @@ def save_chat(messages,response):
 
 
 # ChatGPTに投げる
-def request_chat(input_to_chatgpt: str) -> str:
+def request_chat(input_to_chatgpt:str, role:str, max_tokens:int=100) -> str:
 
     # 実際のメッセージとロール
     messages = [
-            {"role": "system", "content": "あなたは日本人で、主人に仕える優秀なメイドです。"},
+            {"role": "system", "content": role},
             {"role": "user", "content": input_to_chatgpt}
         ]
 
@@ -47,18 +47,19 @@ def request_chat(input_to_chatgpt: str) -> str:
     #print(input_to_chatgpt)                                # 入力文の表示
     print(res['choices'][0]['message']['content'])          # 出力されたメッセージの表示
     save_chat(messages=messages,response={'response':res})  # やりとりの保存
-    #print(res)
+    print(res)
 
     text = res['choices'][0]['message']['content']
 
-    return 
+    return text
 
 
 # テキストを句読点で分割
 def separate_text(text: str):
     pattern = re.compile(r"(?<=、)|(?<=。)|(?<=！)|(?<=？)")
     sentences = re.split(pattern,text)
-    if (1 < len(sentences)): sentences = sentences[:-1]
+    if (1 < len(sentences)): 
+        if (sentences[-1] == ""): sentences = sentences[:-1]
     #print(sentences)
     return sentences
 

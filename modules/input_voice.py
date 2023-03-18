@@ -104,35 +104,62 @@ def voice_to_text() -> str:
 def bytes_to_text() -> str:
     recognizer = sr.Recognizer()
 
-    #result: str = ""
+    result: str = ""
 
+    """
     # マイクから音声を取得
     with sr.Microphone(sample_rate=RATE) as source:
         print("> お話しをどうぞ")
         audio = recognizer.listen(source)
     print("> 変換中・・・")
 
-    # whisperの入力形式に変換
+    # whisperによってテキストへ
     result = recognizer.recognize_whisper(audio, model="base", language="japanese")
 
     """
+
     while True:
         try:
             # マイクから音声を取得
             with sr.Microphone(sample_rate=RATE) as source:
-                print("> お話しをどうぞ")
+                print("> お話ししてください。")
                 audio = recognizer.listen(source)
+            
+            # whisperによってテキストへ
             print("> 変換中・・・")
+            result += recognizer.recognize_whisper(audio, model="small", language="japanese")
+            print("> 現在の入力： {}".format(result))
 
-            # whisperの入力形式に変換
-            result += recognizer.recognize_whisper(audio, model="base", language="japanese")
+            if not ask_user("> 入力を続けますか？"): break
+            if ask_user("> 現在の入力をリセットしますか？"): result = ""
 
         except KeyboardInterrupt:
-            break
-    """
+            print("> 中断しました。")
+            return KeyboardInterrupt
 
-    print(result)
+        finally:
+            print("> 入力を終了します。")
+
     return result
+
+
+# Yes/No
+def ask_user(text:str, limit:float=5) -> bool:
+    print(text)
+
+    start: float = time.perf_counter()
+    while True:
+        elapsed_time: float = time.perf_counter() - start
+        if (limit < elapsed_time): return False
+
+        res: str= input("> [y] はい / [n] いいえ : ")
+
+        if (res == "y" or res == "Y"):
+            return True
+        elif (res == "n" or res == "N"):
+            return False
+        else:
+            continue
 
 
 # テスト

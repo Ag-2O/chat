@@ -12,17 +12,18 @@ import queue
 """
 
 # 参考
+# VoiceVox: https://voicevox.hiroshiba.jp/
 # https://snuow.com/blog/%E3%80%90python%E3%80%91voicevox%E3%82%92python%E3%81%8B%E3%82%89%E4%BD%BF%E7%94%A8%E3%81%99%E3%82%8B%E6%96%B9%E6%B3%95/
 
 class Voicevox:
-    def __init__(self,host="127.0.0.1",port=50021):
+    def __init__(self, host="127.0.0.1", port=50021):
         self.host = host
         self.port = port
         self.is_complete = False    # 完了フラグ
 
 
     # テキストの読み上げ
-    def read_text(self,text_list: list,speaker=47,is_parallel: bool = True):
+    def read_text(self, text_list: list, speaker=47, is_parallel: bool=True):
         try:
             if (1 < len(text_list) and is_parallel):
                 q = queue.Queue()
@@ -47,12 +48,12 @@ class Voicevox:
             import traceback
             etype, value, tb = sys.exc_info()
             print(traceback.format_exception(etype, value, tb))
-            audio = self.text_to_wav("予期せぬエラーが発生したため、もう一度お願いいたします。",speaker)
+            audio = self.text_to_wav("予期せぬエラーが発生したため、もう一度お願いします。",speaker)
             self.play_wav(audio)
 
 
     # テキストリストを順次音声へ
-    def texts_to_wavs(self,text_list:list, q, speaker=47):
+    def texts_to_wavs(self, text_list:list, q, speaker=47):
         for text in text_list:
             q.put(self.text_to_wav(text,speaker))
         self.is_complete = True
